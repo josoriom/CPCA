@@ -2,143 +2,135 @@
 
 const { Matrix, EVD, NIPALS } = require('ml-matrix');
 
-// Consensus Principal Component Analysis
+/**
+ * Creates new PCA (Principal Component Analysis) from the dataset
+ * @param {Matrix} x - dataset
+ * @param {Object} [options]
+ * @param {numeric} [options.blocksSlicing] - This option indicates how the partition of the blocks will be done. Could be a 'number' in the case of data blocks with equal number of blocks or 'Array' in the case of data blocks with different number of columns. In the 'Array' case each element of the array indicates one block and the number indicates the number of columns in the corresponding block (default: number of variables in the data set).
+ * @param {boolean} [options.componentsNumber] - This option indicates the number of components that will work with (default: number of variables in the data set).
+ * @param {boolean} [options.center] - boolean indicating if data should be centered (default: 'true').
+ * @param {boolean} [options.scale] - boolean indicating if data should be scaled (default: 'false').
+ * @param {numeric} [options.method] - It refers to the method to calculate the initial super score. This method can be 'EVD' or 'ones' (default: 'ones').
+ * */
+
 class CPCA {
   constructor(x, options = {}) {
-    const { condition = 1e-10, blocksize = x.rows } = options;
-    // It is the stop condition. When residual matrix norm is equal to 'condition'
-    // Block slice (Block-size can be chosen arbitrarily, and this factor will be number of variables by block)
-    this.x = x;
-    this.x.scale('columns').center('columns');
-    let blocks = {};
-
-    let nb = Math.ceil(this.x.columns / blocksize);
-    let counter = 0;
-    let jump = x.columns;
-    for (let i = 0; i < nb; i++) {
-      jump -= blocksize;
-      let nc = 0;
-      if (jump >= 0) {
-        nc = blocksize;
-      } else {
-        nc = blocksize + jump;
-      }
-      blocks[`block${i}`] = new Matrix(this.x.rows, nc);
-      for (let j = 0; j < nc; j++) {
-        blocks[`block${i}`].setColumn(j, this.x.getColumnVector(counter));
-        counter++;
-      }
+    this.x = x.clone();
+    if (x === true) {
+      this.center = options.center;
+      this.scale = options.scale;
+      this.blocksSlicing = options.blocksSlicing;
+      this.componentsNumber = componentsNumber;
+      this.method = options.method;
+      return;
     }
-    // Choosing initial superscore
-    let tsup = new EVD(this.x.mmul(this.x.transpose())).V.getColumnVector(0); // The initial tsup is the eigenvector with the largest magnitude eigenvalue of (X.X^t) DOI: 10.1007/s11306-011-0361-9
-
-    tsup = tsup.div(tsup.norm());
-
-    let evbd = [];
-    for (let i = 0; i < nb; i++) {
-      evbd.push(blocks[`block${i}`].transpose()
-        .mmul(blocks[`block${i}`]).trace());
+    const {
+      center = true,
+      scale = false,
+      method = 'ones',
+      blocksSlicing = x.columns,
+      componentsNumber = x.columns
+    } = options;
+    if (center === true) {
+      this.x.center('column');
+    } if (scale === true) {
+      this.x.scale('column');
     }
-    this.evbd = evbd;
 
-    let Tb = {}; // Object with the blockscores
-    let Pb = {}; // Object with blockloadings
-    let W = {}; // Object with the blockweights
-    let ev = {}; // Object with explained variance by blocks
-    let ts = {};
-    let test = 1;
-    let k = 0;
-
-    do {
-      let t = new Matrix(this.x.rows, nb); // Matrix with blockscores by each column
-      for (let i = 0; i < nb; i++) {
-        t.setColumn(i,
-          new NIPALS(blocks[`block${i}`].clone()).t
-        );
-      }
-
-      ts[`t${k}`] = t;
-      this.ts = ts;
-      W[`w${k}`] = t.transpose().mmul(tsup);
-
-      tsup = t.mmul(W[`w${k}`]);
-
-      W[`w${k}`] = W[`w${k}`].div(tsup.norm());
-
-      tsup = tsup.div(tsup.norm());
-
-      Tb[`tsup${k}`] = tsup;
-      this.Tb = Tb;
-
-      // Deflation
-      let p = {};
-      let evb = [];
-      for (let i = 0; i < nb; i++) {
-        p[`pb${i}`] = blocks[`block${i}`].transpose()
-          .mmul(tsup);
-
-        blocks[`block${i}`] = blocks[`block${i}`]
-          .sub(tsup.mmul(p[`pb${i}`].transpose()));
-
-        evb.push(blocks[`block${i}`].transpose()
-          .mmul(blocks[`block${i}`]).trace()
-        );
-      }
-
-      Pb[`p${k}`] = p;
-      ev[`ev${k}`] = evb;
-      this.Pb = Pb;
-      this.ev = ev;
-
-      let Xr = new Matrix(this.x.rows, this.x.columns); // Residuals matrix of initial data
+    let blocks, numberOfblocks, counter;
+    this.componentsNumber = componentsNumber;
+    if (Array.isArray(blocksSlicing)) {
+      this.blocksSlicing = blocksSlicing;
+      blocks = {};
+      numberOfblocks = blocksSlicing.length;
       counter = 0;
-      for (let i = 0; i < nb; i++) {
-        for (let j = 0; j < blocks[`block${i}`].columns; j++) {
-          Xr.setColumn(counter, blocks[`block${i}`].getColumnVector(j));
+      for (let i = 0; i < blocksSlicing.length; i++) {
+        blocks[`block${i}`] = new Matrix(this.x.rows, blocksSlicing[i]);
+        for (let j = 0; j < blocksSlicing[i]; j++) {
+          blocks[`block${i}`].setColumn(j, this.x.getColumnVector(counter));
           counter++;
         }
       }
+    } if (typeof (blocksSlicing) === 'number') {
+      let variablesByBlock = [];
+      blocks = {};
+      numberOfblocks = Math.ceil(this.x.columns / blocksSlicing);
+      counter = 0;
+      let jump;
+      jump = x.columns;
+      for (let i = 0; i < numberOfblocks; i++) {
+        jump -= blocksSlicing;
+        let nc = 0;
+        if (jump >= 0) {
+          nc = blocksSlicing;
+        } else {
+          nc = blocksSlicing + jump;
+        }
+        variablesByBlock.push(nc);
+        blocks[`block${i}`] = new Matrix(this.x.rows, nc);
+        for (let j = 0; j < nc; j++) {
+          blocks[`block${i}`].setColumn(j, this.x.getColumnVector(counter));
+          counter++;
+        }
+      }
+      this.blocksSlicing = variablesByBlock;
+    }
 
-      test = Xr.norm();
-
-      tsup = new EVD(Xr.mmul(Xr.transpose())).V.getColumnVector(0);
-
+    // Choosing initial superscore
+    let tsup;
+    if (method === 'EVD') {
+      tsup = new EVD(this.x.mmul(this.x.transpose())).V.getColumnVector(0);
+    } if (method === 'ones') {
+      tsup = new Matrix(this.x.rows, 1).setColumn(0, new Array(this.x.rows).fill(1));
+    }
+    tsup = tsup.div(tsup.norm());
+    let Tsup = new Matrix(this.x.rows, componentsNumber);
+    let P = {};
+    let W = {};
+    let k = 0;
+    do {
+      let T = new Matrix(this.x.rows, numberOfblocks);
+      let w;
+      for (let i = 0; i < numberOfblocks; i++) {
+        let g = blocks[`block${i}`].clone();
+        let h = new NIPALS(g);
+        T.setColumn(i, h.t.div(Math.sqrt(blocks[`block${i}`].columns)));
+      }
+      w = T.transpose().mmul(tsup);
+      tsup = T.mmul(w);
+      W[`w${k}`] = w.div(w.norm());
+      tsup = tsup.div(tsup.norm());
+      Tsup.setColumn(k, tsup);
+      // Deflation
+      let p = {};
+      for (let i = 0; i < numberOfblocks; i++) {
+        p[`block${i}`] = blocks[`block${i}`].transpose()
+          .mmul(tsup);
+        blocks[`block${i}`] = blocks[`block${i}`]
+          .sub(tsup.mmul(p[`block${i}`].transpose()));
+      }
+      P[`component${k}`] = p;
+      // Updating tsup
+      if (method === 'EVD') {
+        let Xr = new Matrix(this.x.rows, this.x.columns);
+        counter = 0;
+        for (let i = 0; i < numberOfblocks; i++) {
+          for (let j = 0; j < blocks[`block${i}`].columns; j++) {
+            Xr.setColumn(counter, blocks[`block${i}`].getColumnVector(j));
+            counter++;
+          }
+        }
+        tsup = new EVD(Xr.mmul(Xr.transpose())).V.getColumnVector(0);
+      } if (method === 'ones') {
+        tsup = new Matrix(x.rows, 1)
+          .setColumn(0, new Array(x.rows).fill(1));
+      }
       tsup = tsup.div(tsup.norm());
       k++;
-    } while (test > condition);
-
-    let Tsup = new Matrix(this.x.rows, Object.keys(Tb).length); // Superscores
-    let Psup = {}; // Superloadings
-
-    for (let j = 0; j < nb; j++) {
-      Psup[`psup${j}`] = new Matrix(Pb[`p${0}`][`pb${j}`].rows, Object.keys(Tb).length);
-    }
-
-    for (let i = 0; i < Object.keys(Tb).length; i++) {
-      Tsup.setColumn(i, Tb[`tsup${i}`]);
-      for (let k = 0; k < nb; k++) {
-        Psup[`psup${k}`].setColumn(i, Pb[`p${i}`][`pb${k}`]);
-      }
-    }
-
+    } while (k < componentsNumber);
+    this.W = W;
     this.Tsup = Tsup;
-    this.Psup = Psup;
-  }
-
-  /**
-   * Returns a object with the blockscores
-   * @returns {[Array]}
-   */
-  getBlockScores() {
-    return this.Tb;
-  }
-
-  /**
-   * Returns a object with the blockloadings
-   * @returns {[Array]}
-   */
-  getBlockLoadings() {
-    return this.Pb;
+    this.P = P;
   }
 
   /**
@@ -153,8 +145,36 @@ class CPCA {
    * Returns a object with superloadings by blocks
    * @returns {[Object]}
    */
-  getSuperLoadings() {
-    return this.Psup;
+  getLoadings() {
+    let loadingBlocks = {}; // Building Loadings by blocks
+    for (let i = 0; i < Object.keys(this.P.component0).length; i++) {
+      loadingBlocks[`loadingBlock_${i}`] = new Matrix(this.P[`component${0}`][`block${i}`].rows, this.componentsNumber);
+      for (let j = 0; j < this.componentsNumber; j++) {
+        loadingBlocks[`loadingBlock_${i}`].setColumn(j, this.P[`component${j}`][`block${i}`]);
+      }
+    }
+    // Building Superloadings
+    let Psup = new Matrix(this.x.columns, this.componentsNumber);
+    for (let i = 0; i < Object.keys(this.P.component0).length; i++) {
+      if (i === 0) {
+        Psup.setSubMatrix(loadingBlocks[`loadingBlock_${i}`], 0, 0);
+      } else {
+        if (this.blocksSlicing === 1) {
+          Psup.setSubMatrix(loadingBlocks[`loadingBlock_${i}`], i, 0);
+        } else {
+          Psup.setSubMatrix(loadingBlocks[`loadingBlock_${i}`], loadingBlocks[`loadingBlock_${i - 1}`].rows, 0);
+        }
+      }
+    }
+
+    let eigenValues = []; let eigenVectors = new Matrix(Psup.rows, Psup.columns);
+    for (let i = 0; i < Psup.columns; i++) {
+      let z = Psup.getColumnVector(i).norm();
+      eigenVectors.setColumn(i, Psup.getColumnVector(i).div(z));
+      eigenValues.push(z);
+    }
+    let result = { loadingBlocks, Psup, eigenValues, eigenVectors };
+    return result;
   }
 
   /**
@@ -162,49 +182,38 @@ class CPCA {
    * @returns {[Object]}
    */
   getSuperWeights() {
-    let result = {};
-    for (let i = 0; i < this.Tsup.columns; i++) {
-      let g = [];
-      for (let j = 0; j < Object.keys(this.Psup).length; j++) {
-        g.push(this.Tsup.getColumnVector(i).transpose()
-          .mmul(this.ts[`t${i}`].getColumnVector(j)).get(0, 0)
-        );
-      }
-      result[`w${i}`] = g;
-    }
-    return result;
-  }
-
-  /**
-   * Returns a object with explained variance by blocks
-   * @returns {[Object]}
-   */
-  getExplainedVarianceBlocks() {
-    let result = {};
-    let g = [];
-    for (let i = 0; i < Object.keys(this.ev).length; i++) {
-      for (let j = 0; j < this.evbd.length; j++) {
-        g.push(this.ev[`ev${i}`][j] / this.evbd[j]);
-      }
-      result[`ev${i}`] = g;
-      g = [];
-    }
-    return result;
+    return this.W;
   }
 
   /**
    * Returns a object with amount of variation explained in the data for each superscore
    * @returns {[Object]}
    */
-  getLambda() {
-    let l = [];
-    let s = this.x.mmul(this.x.transpose());
-    for (let i = 0; i < this.Tsup.columns; i++) {
-      l.push(this.Tsup.getColumnVector(i).transpose().mmul(s)
-        .mmul(this.Tsup.getColumnVector(i)).get(0, 0)
-      );
+  getDataByBlocks() {
+    let predictedBlocks = {}; let dataBlocks = {}; let counter = 0; let relativeError = [];
+    for (let j = 0; j < Object.keys(this.P.component0).length; j++) {
+      let h, g;
+      g = new Matrix(this.x.rows, this.blocksSlicing[j]);
+      for (let i = 0; i < Object.keys(this.P).length; i++) {
+        h = this.Tsup.getColumnVector(i)
+          .mmul(this.P[`component${i}`][`block${j}`].clone().transpose());
+        g.add(h);
+      }
+      predictedBlocks[`Block_${j}`] = g;
+      let data = new Matrix(this.x.rows, g.columns);
+      for (let i = 0; i < g.columns; i++) {
+        data.setColumn(i, this.x.getColumnVector(counter));
+        counter++;
+      }
+      dataBlocks[`Block_${j}`] = data;
+      let factor = dataBlocks[`Block_${j}`].norm() / predictedBlocks[`Block_${j}`].norm();
+      let s = dataBlocks[`Block_${j}`].clone().sub(predictedBlocks[`Block_${j}`].clone().mul(factor));
+      let o = s.norm() / dataBlocks[`Block_${j}`].norm();
+      relativeError.push(o);
     }
-    return l;
+    let result = { relativeError, predictedBlocks };
+    return result;
   }
 }
+module.exports = CPCA;
 
