@@ -7,6 +7,13 @@
   
 Consensus Principal Component Analysis
 
+# CPCA
+<p align="center">
+</p>
+<p align="center">
+  <img alt="CPCA src="images/cpca.png">
+</p>
+
 ## Installation
 
 `$ npm install ml-cpca`
