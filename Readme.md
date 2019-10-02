@@ -7,11 +7,8 @@
   
 Consensus Principal Component Analysis
 
-# CPCA
 <p align="center">
-</p>
-<p align="center">
-  <img alt="CPCA src="images/cpca.png">
+  <img src = "images/cpca.png" width="400">
 </p>
 
 ## Installation
