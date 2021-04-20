@@ -1,9 +1,9 @@
 # ml-cpca
 
-  [![NPM version][npm-image]][npm-url]
-  [![build status][travis-image]][travis-url]
-  [![David deps][david-image]][david-url]
-  [![npm download][download-image]][download-url]
+[![NPM version][npm-image]][npm-url]
+[![build status][ci-image]][ci-url]
+[![Test coverage][codecov-image]][codecov-url]
+[![npm download][download-image]][download-url]
   
 Consensus Principal Component Analysis
 
@@ -22,23 +22,6 @@ Consensus Principal Component Analysis
 ```js
 const cpca = require('ml-cpca');
 ```
-**Equations**
-* Data set partition where nb is the number of blocks and N is the number of components.
-
-![equation](https://tex.cheminfo.org/?tex=X%20=%20\left%20[%20X_{1},%20...,%20X_{n_{b}}%20\right%20])
-
-* Super score (Tsup) is a Matrix with block scores (tsup,j) arranged by columns.
-
-![equation](https://tex.cheminfo.org/?tex=T_{sup}%20=%20[t_{sup,1},%20...,%20t_{sup,N}])
-
-* Super loadings (Psup) is an object with block loadings (psup,j).
-
-![equation](https://tex.cheminfo.org/?tex=P_{sup}%20=%20[p_{sup,1},%20...,%20p_{sup,N}])
-
-
-* Each block can be rebuilded by the outer product of its respective block score and block loading.
-
-![equation](https://tex.cheminfo.org/?tex=X_{k}%20=%20\sum_{j=1}^{N}t_{sup,k}^{j}\otimes%20p_{sup,k}^{j}%20%20;%20for\\%20%20%20k%20=%201,%20...,%20n_{b})
 
 **Arguments**
 
@@ -56,12 +39,12 @@ const cpca = require('ml-cpca');
 
 [MIT](./LICENSE)
 
-[npm-image]: https://img.shields.io/npm/v/cpca.svg?style=flat-square
+[npm-image]: https://img.shields.io/npm/v/cpca.svg
 [npm-url]: https://www.npmjs.com/package/cpca
-[travis-image]: https://img.shields.io/travis/cheminfo/cpca/master.svg?style=flat-square
-[travis-url]: https://travis-ci.org/cheminfo/cpca
-[david-image]: https://img.shields.io/david/cheminfo/cpca.svg?style=flat-square
-[david-url]: https://david-dm.org/cheminfo/cpca
+[ci-image]: https://github.com/josoriom/cpca/workflows/Node.js%20CI/badge.svg?branch=master
+[ci-url]: https://github.com/josoriom/cpca/actions?query=workflow%3A%22Node.js+CI%22
+[codecov-image]: https://img.shields.io/codecov/c/github/josoriom/cpca.svg
+[codecov-url]: https://codecov.io/gh/josoriom/cpca
 [download-image]: https://img.shields.io/npm/dm/cpca.svg?style=flat-square
 [download-url]: https://www.npmjs.com/package/cpca
 

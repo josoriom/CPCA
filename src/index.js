@@ -1,5 +1,3 @@
-'use strict';
-
 const { Matrix, EVD, NIPALS } = require('ml-matrix');
 
 /**
@@ -13,7 +11,7 @@ const { Matrix, EVD, NIPALS } = require('ml-matrix');
  * @param {numeric} [options.method] - It refers to the method to calculate the initial super score. This method can be 'EVD' or 'ones' (default: 'ones').
  * */
 
-class CPCA {
+export default class CPCA {
   constructor(x, options = {}) {
     x = x.clone();
     if (x === true) {
@@ -24,6 +22,7 @@ class CPCA {
       this.method = options.method;
       return;
     }
+
     const {
       center = true,
       scale = false,
@@ -33,7 +32,9 @@ class CPCA {
     } = options;
     if (center === true) {
       x.center('column');
-    } if (scale === true) {
+    }
+
+    if (scale === true) {
       x.scale('column');
     }
 
@@ -51,7 +52,7 @@ class CPCA {
         }
         blocks.push(h);
       }
-    } if (typeof (blocksSlicing) === 'number') {
+    } else if (typeof (blocksSlicing) === 'number') {
       let variablesByBlock = [];
       blocks = [];
       let counter = 0; let jump = x.columns;
@@ -78,7 +79,7 @@ class CPCA {
     let tsup;
     if (method === 'EVD') {
       tsup = new EVD(x.mmul(x.transpose())).V.getColumnVector(0);
-    } if (method === 'ones') {
+    } else if (method === 'ones') {
       tsup = new Matrix(x.rows, 1).setColumn(0, new Array(x.rows).fill(1));
     }
     tsup = tsup.div(tsup.norm());
@@ -120,7 +121,7 @@ class CPCA {
           }
         }
         tsup = new EVD(Xr.mmul(Xr.transpose())).V.getColumnVector(0);
-      } if (method === 'ones') {
+      } else if (method === 'ones') {
         tsup = new Matrix(x.rows, 1)
           .setColumn(0, new Array(x.rows).fill(1));
       }
@@ -163,9 +164,10 @@ class CPCA {
       } else {
         if (this.blocksSlicing[i] === 1) {
           Psup.setSubMatrix(loadingBlocks[i], counter, 0);
-        } else {
-          Psup.setSubMatrix(loadingBlocks[i], counter, 0);
-        }
+        } 
+        // else {
+        //   Psup.setSubMatrix(loadingBlocks[i], counter, 0);
+        // }
       }
       counter += loadingBlocks[i].rows;
     }

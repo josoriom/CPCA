@@ -18,8 +18,9 @@ const expectedLoadings = [
 ];
 
 describe('iris dataset test method covarianceMatrix', function () {
-  let cpca = new CPCA(iris, { center: true, scale: true });
+
   it('loadings', function () {
+    let cpca = new CPCA(iris, { center: true, scale: true });
     const loadings = cpca
       .getLoadings()
       .eigenVectors
@@ -29,6 +30,7 @@ describe('iris dataset test method covarianceMatrix', function () {
     expect(loadings).toBeDeepCloseTo(expectedLoadings, 3);
   });
   it('loadings should be orthogonal', function () {
+    let cpca = new CPCA(iris, { center: true, scale: true });
     const m = cpca
       .getLoadings()
       .eigenVectors
@@ -38,6 +40,7 @@ describe('iris dataset test method covarianceMatrix', function () {
     expect(m.sub(Matrix.eye(4, 4)).sum()).toStrictEqual(0);
   });
   it('eigenvalues', function () {
+    let cpca = new CPCA(iris, { center: true, scale: true });
     const eigenvalues = cpca.getLoadings().eigenValues;
     expect(eigenvalues).toBeDeepCloseTo(
       [20.853205, 11.67007, 4.676192, 1.756847],
