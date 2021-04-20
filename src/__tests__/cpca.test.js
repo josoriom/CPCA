@@ -1,13 +1,12 @@
-'use strict';
+import { toBeDeepCloseTo } from 'jest-matcher-deep-close-to';
+import { getNumbers } from 'ml-dataset-iris';
+import { Matrix } from 'ml-matrix';
 
-const { Matrix } = require('ml-matrix');
-const dataset = require('ml-dataset-iris').getNumbers();
-const { toBeDeepCloseTo } = require('jest-matcher-deep-close-to');
-
-const CPCA = require('../index');
+import CPCA from '../index';
 
 expect.extend({ toBeDeepCloseTo });
 
+const dataset = getNumbers();
 const iris = new Matrix(dataset);
 
 const expectedLoadings = [
@@ -18,13 +17,11 @@ const expectedLoadings = [
 ];
 
 describe('iris dataset test method covarianceMatrix', function () {
-
   it('loadings', function () {
     let cpca = new CPCA(iris, { center: true, scale: true });
     const loadings = cpca
       .getLoadings()
-      .eigenVectors
-      .transpose()
+      .eigenVectors.transpose()
       .to2DArray()
       .map((x) => x.map((y) => Math.abs(y)));
     expect(loadings).toBeDeepCloseTo(expectedLoadings, 3);
@@ -33,8 +30,7 @@ describe('iris dataset test method covarianceMatrix', function () {
     let cpca = new CPCA(iris, { center: true, scale: true });
     const m = cpca
       .getLoadings()
-      .eigenVectors
-      .transpose()
+      .eigenVectors.transpose()
       .mmul(cpca.getLoadings().eigenVectors)
       .round();
     expect(m.sub(Matrix.eye(4, 4)).sum()).toStrictEqual(0);
@@ -48,11 +44,13 @@ describe('iris dataset test method covarianceMatrix', function () {
     );
   });
   it('Relative errors of the aproximation by blocks using 4 components', function () {
-    var cpca = new CPCA(iris, { center: false, scale: false, blocksSlicing: 2, componentsNumber: 4 });
-    var error = cpca
-      .getDataByBlocks()
-      .relativeError;
+    let cpca = new CPCA(iris, {
+      center: false,
+      scale: false,
+      blocksSlicing: 2,
+      componentsNumber: 4,
+    });
+    let error = cpca.getDataByBlocks().relativeError;
     expect(error).toBeDeepCloseTo([0.0, 0.0], 2);
   });
 });
-

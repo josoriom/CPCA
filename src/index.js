@@ -1,4 +1,4 @@
-const { Matrix, EVD, NIPALS } = require('ml-matrix');
+import { Matrix, EVD, NIPALS } from 'ml-matrix';
 
 /**
  * Creates new PCA (Principal Component Analysis) from the dataset
@@ -28,7 +28,7 @@ export default class CPCA {
       scale = false,
       method = 'ones',
       blocksSlicing = x.columns,
-      componentsNumber = x.columns
+      componentsNumber = x.columns,
     } = options;
     if (center === true) {
       x.center('column');
@@ -52,10 +52,11 @@ export default class CPCA {
         }
         blocks.push(h);
       }
-    } else if (typeof (blocksSlicing) === 'number') {
+    } else if (typeof blocksSlicing === 'number') {
       let variablesByBlock = [];
       blocks = [];
-      let counter = 0; let jump = x.columns;
+      let counter = 0;
+      let jump = x.columns;
       for (let i = 0; i < Math.ceil(x.columns / blocksSlicing); i++) {
         jump -= blocksSlicing;
         let nc = 0;
@@ -103,10 +104,8 @@ export default class CPCA {
       // Deflation
       let p = [];
       for (let i = 0; i < blocks.length; i++) {
-        let g = blocks[i].transpose()
-          .mmul(tsup);
-        blocks[i] = blocks[i]
-          .sub(tsup.mmul(g.transpose()));
+        let g = blocks[i].transpose().mmul(tsup);
+        blocks[i] = blocks[i].sub(tsup.mmul(g.transpose()));
         p.push(g);
       }
       P.push(p);
@@ -122,8 +121,7 @@ export default class CPCA {
         }
         tsup = new EVD(Xr.mmul(Xr.transpose())).V.getColumnVector(0);
       } else if (method === 'ones') {
-        tsup = new Matrix(x.rows, 1)
-          .setColumn(0, new Array(x.rows).fill(1));
+        tsup = new Matrix(x.rows, 1).setColumn(0, new Array(x.rows).fill(1));
       }
       tsup = tsup.div(tsup.norm());
       k++;
@@ -164,7 +162,7 @@ export default class CPCA {
       } else {
         if (this.blocksSlicing[i] === 1) {
           Psup.setSubMatrix(loadingBlocks[i], counter, 0);
-        } 
+        }
         // else {
         //   Psup.setSubMatrix(loadingBlocks[i], counter, 0);
         // }
@@ -172,7 +170,8 @@ export default class CPCA {
       counter += loadingBlocks[i].rows;
     }
 
-    let eigenValues = []; let eigenVectors = new Matrix(Psup.rows, Psup.columns);
+    let eigenValues = [];
+    let eigenVectors = new Matrix(Psup.rows, Psup.columns);
     for (let i = 0; i < Psup.columns; i++) {
       let z = Psup.getColumnVector(i).norm();
       eigenVectors.setColumn(i, Psup.getColumnVector(i).div(z));
@@ -195,13 +194,15 @@ export default class CPCA {
    * @returns {[Object]}
    */
   getDataByBlocks() {
-    let predictedBlocks = []; let dataBlocks = []; let counter = 0; let relativeError = [];
+    let predictedBlocks = [];
+    let dataBlocks = [];
+    let counter = 0;
+    let relativeError = [];
     for (let j = 0; j < this.P[0].length; j++) {
       let h, g;
       g = new Matrix(this.x.rows, this.blocksSlicing[j]);
       for (let i = 0; i < this.P.length; i++) {
-        h = this.Tsup.getColumnVector(i)
-          .mmul(this.P[i][j].clone().transpose());
+        h = this.Tsup.getColumnVector(i).mmul(this.P[i][j].clone().transpose());
         g.add(h);
       }
       predictedBlocks.push(g);
@@ -221,4 +222,3 @@ export default class CPCA {
   }
 }
 module.exports = CPCA;
-
