@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "compile": "rollup -c",
-    "build": "node_modules/.bin/cheminfo build --root dist",
+    "build": "cheminfo build --root dist",
     "prepublishOnly": "npm run compile",
     "eslint": "eslint src",
     "eslint-fix": "npm run eslint -- --fix",
@@ -20,15 +20,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cheminfo/cpca.git"
+    "url": "git+https://github.com/josoriom/cpca.git"
   },
   "keywords": [],
   "author": "josoriom",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/cheminfo/cpca/issues"
+    "url": "https://github.com/josoriom/cpca/issues"
   },
-  "homepage": "https://github.com/cheminfo/cpca#readme",
+  "homepage": "https://github.com/josoriom/cpca#readme",
   "jest": {
     "testEnvironment": "node"
   },

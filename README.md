@@ -1,4 +1,4 @@
-# ml-cpca
+# CPCA
 
 [![NPM version][npm-image]][npm-url]
 [![build status][ci-image]][ci-url]
@@ -13,14 +13,14 @@ Consensus Principal Component Analysis
 
 ## Installation
 
-`$ npm install ml-cpca`
+`$ npm istall cpca`
 
 ## [API Documentation](https://cheminfo.github.io/cpca/)
 
 ## Example
 
 ```js
-const cpca = require('ml-cpca');
+import cpca from 'cpca';
 ```
 
 **Arguments**
