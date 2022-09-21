@@ -160,7 +160,7 @@ export default class CPCA {
       if (i === 0) {
         Psup.setSubMatrix(loadingBlocks[i], counter, 0);
       } else if (this.blocksSlicing[i] === 1) {
-          Psup.setSubMatrix(loadingBlocks[i], counter, 0);
+        Psup.setSubMatrix(loadingBlocks[i], counter, 0);
       }
       counter += loadingBlocks[i].rows;
     }
