@@ -16,8 +16,8 @@ const expectedLoadings = [
   [0.261, 0.124, 0.801, 0.524],
 ];
 
-describe('iris dataset test method covarianceMatrix', function () {
-  it('loadings', function () {
+describe('iris dataset test method covarianceMatrix', () => {
+  it('loadings', () => {
     let cpca = new CPCA(iris, { center: true, scale: true });
     const loadings = cpca
       .getLoadings()
@@ -26,16 +26,16 @@ describe('iris dataset test method covarianceMatrix', function () {
       .map((x) => x.map((y) => Math.abs(y)));
     expect(loadings).toBeDeepCloseTo(expectedLoadings, 3);
   });
-  it('loadings should be orthogonal', function () {
+  it('loadings should be orthogonal', () => {
     let cpca = new CPCA(iris, { center: true, scale: true });
     const m = cpca
       .getLoadings()
       .eigenVectors.transpose()
       .mmul(cpca.getLoadings().eigenVectors)
       .round();
-    expect(m.sub(Matrix.eye(4, 4)).sum()).toStrictEqual(0);
+    expect(m.sub(Matrix.eye(4, 4)).sum()).toBe(0);
   });
-  it('eigenvalues', function () {
+  it('eigenvalues', () => {
     let cpca = new CPCA(iris, { center: true, scale: true });
     const eigenvalues = cpca.getLoadings().eigenValues;
     expect(eigenvalues).toBeDeepCloseTo(
@@ -43,7 +43,7 @@ describe('iris dataset test method covarianceMatrix', function () {
       6,
     );
   });
-  it('Relative errors of the aproximation by blocks using 4 components', function () {
+  it('Relative errors of the aproximation by blocks using 4 components', () => {
     let cpca = new CPCA(iris, {
       center: false,
       scale: false,

@@ -159,13 +159,8 @@ export default class CPCA {
     for (let i = 0; i < this.P[0].length; i++) {
       if (i === 0) {
         Psup.setSubMatrix(loadingBlocks[i], counter, 0);
-      } else {
-        if (this.blocksSlicing[i] === 1) {
+      } else if (this.blocksSlicing[i] === 1) {
           Psup.setSubMatrix(loadingBlocks[i], counter, 0);
-        }
-        // else {
-        //   Psup.setSubMatrix(loadingBlocks[i], counter, 0);
-        // }
       }
       counter += loadingBlocks[i].rows;
     }
@@ -221,4 +216,3 @@ export default class CPCA {
     return result;
   }
 }
-module.exports = CPCA;
