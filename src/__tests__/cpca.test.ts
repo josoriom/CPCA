@@ -47,8 +47,8 @@ describe('iris dataset test method covarianceMatrix', () => {
     let cpca = new CPCA(iris, {
       center: false,
       scale: false,
-      blocksSlicing: 2,
-      componentsNumber: 4,
+      slices: 2,
+      components: 4,
     });
     let error = cpca.getDataByBlocks().relativeError;
     expect(error).toBeDeepCloseTo([0.0, 0.0], 2);
